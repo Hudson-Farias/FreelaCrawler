@@ -1,0 +1,7 @@
+py-cord
+playwright
+httpx
+beautifulsoup4
+python-dotenv
+pydantic
+iter_tools
