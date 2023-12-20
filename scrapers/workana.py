@@ -2,7 +2,28 @@ from scrapers import Crawler
 
 from httpx import AsyncClient
 from bs4 import BeautifulSoup
+from datetime import datetime
 
+mounths = {
+    'janeiro': 'January',
+    'fevereiro': 'February',
+    'março': 'March',
+    'abril': 'April',
+    'maio': 'May',
+    'junho': 'June',
+    'julho': 'July',
+    'agosto': 'August',
+    'setembro': 'September',
+    'outubro': 'October',
+    'novembro': 'November',
+    'dezembro': 'December'
+}
+
+def translate(date: str):
+    for pt, en in mounths.items():
+        date = date.replace(pt, en)
+
+    return date
 
 class Scraper(Crawler):
     url_base = 'https://www.workana.com'
@@ -33,7 +54,15 @@ class Scraper(Crawler):
             payload['title'] = element.text.strip()
             payload['link'] = cls.url_base + element.find('a').get('href').strip().replace(f'?ref=projects_{page}', '')
             
-            payload['description'] = project.find('div', class_ = 'project-details').text.strip()
+
+            time = project.find('span', class_ = 'date').get('title').lower()
+            time = translate(time)
+            timestamp = int(datetime.strptime(time, '%d de %B de %Y %H:%M').timestamp())
+            payload['description'] = f'**Publicado**: <t:{timestamp}:R>\n'
+
+            payload['description'] += '**Propostas**: ' + project.find('span', class_ = 'bids').text.strip().replace('Propostas: ', '') + '\n'
+
+            # payload['description'] = project.find('div', class_ = 'project-details').text.strip()
 
             payload['footer'] = 'Workana: ' + project.find('span', class_ = 'values').text.strip()
 

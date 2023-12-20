@@ -4,23 +4,25 @@ from discord.ext.tasks import loop
 
 from asyncio import create_task, gather
 from httpx import AsyncClient
-from datetime import time
+from datetime import datetime, timedelta, time
 
 from scrapers.workana import Scraper
 from utils.json import json_load
 
 researches = json_load('researches.json')
 
+now = datetime.now()
+
 times = [
+    # (now + timedelta(hours = 3, seconds = 10) - timedelta(microseconds = now.microsecond)).time(),
     time(10, 0, 0)
-    # , time(16, 9, 30)
 ]
 
 class Crawlling(Cog):
     def __init__(self, bot: Client):
         self.bot = bot
-        
-        
+
+
     @Cog.listener('on_ready')
     async def ready(self):
         self.crawler.start()
@@ -29,10 +31,16 @@ class Crawlling(Cog):
 
     @loop(time = times)
     async def crawler(self):
-        data = []
+        print('rodando')
+        
         async with AsyncClient() as client:
-            for research in researches:
-                data += await Scraper.run(client, research['search'], research['channel_id'])
+            tasks = [create_task(Scraper.run(client, research['search'], research['channel_id'])) 
+                        for research in researches]
+
+            results = await gather(*tasks)
+        
+        data = []
+        for i in results: data += i
             
         tasks = [create_task(self.sender_embed(i)) for i in data]
         await gather(*tasks)
@@ -44,7 +52,9 @@ class Crawlling(Cog):
 
         embed.title = payload['title']
         embed.url = payload['link']
-        embed.description = payload['description'][:4096]
+        embed.description = 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
+        embed.description += payload['description']
+        embed.description += 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
         embed.set_footer(text = payload['footer'], icon_url = payload['icon'])
 
         await channel.send(embed = embed)
