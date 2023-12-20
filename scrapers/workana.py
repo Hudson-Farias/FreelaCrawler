@@ -12,9 +12,9 @@ class Scraper(Crawler):
     @classmethod
     async def run(cls, client: AsyncClient, search: str, channel_id: int):
         data = await cls.__scraping(cls, client, search, 1, channel_id, [])
-        print(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1w&query={search}&page=1')
+        # print(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1w&query={search}&page=1')
         # print(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1d&query={search}&page=1')
-        print(len(data))
+        # print(len(data))
         return data
 
 
