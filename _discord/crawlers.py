@@ -23,10 +23,9 @@ class Crawler(Cog):
                 # break
             
         # json_creater(data, f'data.json')
-        print(len(data))
-        tasks = [create_task(self.sender_embed(i)) for i in data]
-        await gather(*tasks)
-        print('acabo')
+        # tasks = [create_task(self.sender_embed(i)) for i in data]
+        # await gather(*tasks)
+        # print('acabo')
 
 
     async def sender_embed(self, payload):
