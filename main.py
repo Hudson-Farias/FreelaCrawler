@@ -1,45 +1,24 @@
-from discord import Client, Intents, Embed, Colour
+from discord import Intents
+from discord.ext.commands import Bot
 
 from playwright.async_api import async_playwright
-from httpx import AsyncClient
-from asyncio import run, create_task, gather
 from dotenv import load_dotenv
-from os import getenv
-
-from scrapers.workana import Scraper
-
-from utils.json import json_load
+from os import getenv, listdir
 
 load_dotenv()
 
-researches = json_load('researches.json')
+client = Bot(intents = Intents.all())
 
-client = Client(intents = Intents.all())
+def cogs(path = '_discord'):
+    for file in listdir(path):
+        if file != '__pycache__':
+            if file.endswith('.py'):
+                file = f'{path}.{file}'.replace('.py', '')
+                client.load_extension(file.replace('/', '.'))
 
-
-async def sender_embed(payload):
-    channel = client.get_channel(payload['channel_id'])
-    embed = Embed()
-
-    embed.title = payload['title']
-    embed.url = payload['link']
-    embed.description = payload['description']
-    embed.set_footer(text = payload['footer'], icon_url = payload['icon'])
-
-    await channel.send(embed = embed)
-
-
-@client.event
-async def on_ready():
-    print(f'{client.user} logado')
-    data = []
-
-    async with AsyncClient() as client_httpx:
-        for research in researches:
-            data += await Scraper.run(client_httpx, research['search'], research['channel_id'])
-            break
-    
-    tasks = [create_task(sender_embed(i)) for i in data]
-    await gather(*tasks)
-
-client.run(getenv('DISCORD_TOKEN'))
+            else:
+                cogs(path + '/' + file)
+                
+if __name__ == '__main__':
+    cogs()
+    client.run(getenv('DISCORD_TOKEN'))

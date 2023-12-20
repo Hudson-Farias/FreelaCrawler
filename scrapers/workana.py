@@ -3,20 +3,19 @@ from scrapers import Crawler
 from httpx import AsyncClient
 from bs4 import BeautifulSoup
 
+
 class Scraper(Crawler):
     url_base = 'https://www.workana.com'
+    urls = []
 
 
     @classmethod
     async def run(cls, client: AsyncClient, search: str, channel_id: int):
-        page = 1
-        data = []
-        data += await cls.__scraping(cls, client, search, page, channel_id)
-
+        data = await cls.__scraping(cls, client, search, 1, channel_id, [])
         return data
 
 
-    async def __scraping(cls, client: AsyncClient, search: str, page: int, channel_id: int, data: list = []):
+    async def __scraping(cls, client: AsyncClient, search: str, page: int, channel_id: int, data: list):
         response = await client.get(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&query={search}&page={page}', timeout = 600)
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -28,7 +27,7 @@ class Scraper(Crawler):
             element = project.find('h2', class_ = 'project-title')
 
             payload['title'] = element.text.strip()
-            payload['link'] = cls.url_base + element.find('a').get('href').strip()
+            payload['link'] = cls.url_base + element.find('a').get('href').strip().replace(f'?ref=projects_{page}', '')
             
             payload['description'] = project.find('div', class_ = 'project-details').text.strip()
 
@@ -37,9 +36,10 @@ class Scraper(Crawler):
             payload['icon'] = soup.find('link', rel='icon').get('href')
             payload['channel_id'] = channel_id
             
-            data.append(payload)
+            if payload['link'] in cls.urls: continue
 
-            return data
+            data.append(payload)
+            cls.urls.append(payload['link'])
 
         pagination = soup.find('ul', class_ = 'pagination')
         active = pagination.find('li', 'active')
