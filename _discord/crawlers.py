@@ -20,12 +20,9 @@ class Crawler(Cog):
         async with AsyncClient() as client:
             for research in researches:
                 data += await Scraper.run(client, research['search'], research['channel_id'])
-                # break
             
-        # json_creater(data, f'data.json')
-        # tasks = [create_task(self.sender_embed(i)) for i in data]
-        # await gather(*tasks)
-        # print('acabo')
+        tasks = [create_task(self.sender_embed(i)) for i in data]
+        await gather(*tasks)
 
 
     async def sender_embed(self, payload):
