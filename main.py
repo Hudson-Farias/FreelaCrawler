@@ -9,7 +9,7 @@ load_dotenv()
 
 client = Bot(intents = Intents.all())
 
-def cogs(path = '_discord'):
+def cogs(path = 'cogs'):
     for file in listdir(path):
         if file != '__pycache__':
             if file.endswith('.py'):

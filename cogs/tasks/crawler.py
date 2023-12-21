@@ -7,14 +7,12 @@ from httpx import AsyncClient
 from datetime import datetime, timedelta, time
 
 from scrapers.workana import Scraper
-from utils.json import json_load
-
-researches = json_load('researches.json')
+from database.researches import ResearchesORM
 
 now = datetime.now()
 
 times = [
-    # (now + timedelta(hours = 3, seconds = 10) - timedelta(microseconds = now.microsecond)).time(),
+    # (now + timedelta(hours = 3, seconds = 15) - timedelta(microseconds = now.microsecond)).time(),
     time(10, 0, 0)
 ]
 
@@ -32,9 +30,10 @@ class Crawlling(Cog):
     @loop(time = times)
     async def crawler(self):
         print('rodando')
-        
+        researches = await ResearchesORM.find_many()
+
         async with AsyncClient() as client:
-            tasks = [create_task(Scraper.run(client, research['search'], research['channel_id'])) 
+            tasks = [create_task(Scraper.run(client, research.search, research.channel_id)) 
                         for research in researches]
 
             results = await gather(*tasks)
@@ -52,9 +51,9 @@ class Crawlling(Cog):
 
         embed.title = payload['title']
         embed.url = payload['link']
-        embed.description = 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
+        embed.description = 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
         embed.description += payload['description']
-        embed.description += 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
+        embed.description += 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
         embed.set_footer(text = payload['footer'], icon_url = payload['icon'])
 
         await channel.send(embed = embed)
