@@ -9,7 +9,7 @@ class Ready(Cog):
 
     @Cog.listener('on_ready')
     async def ready(self):
-        print(f'{self.bot.user} logado (v3)')
+        print(f'{self.bot.user} logado (v4)')
         await dashboard(self.bot)
 
 def setup(bot):

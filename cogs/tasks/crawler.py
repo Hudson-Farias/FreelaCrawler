@@ -5,14 +5,15 @@ from discord.ext.tasks import loop
 from asyncio import create_task, gather
 from httpx import AsyncClient
 from datetime import datetime, timedelta, time
+from importlib import import_module
+from os import listdir
 
-from scrapers.workana import Scraper
 from database.researches import ResearchesORM
 
 now = datetime.now()
 
 times = [
-    # (now + timedelta(hours = 3, seconds = 15) - timedelta(microseconds = now.microsecond)).time(),
+    (now + timedelta(hours = 3, seconds = 10) - timedelta(microseconds = now.microsecond)).time(),
     time(10, 0, 0)
 ]
 
@@ -31,10 +32,14 @@ class Crawlling(Cog):
     async def crawler(self):
         print('rodando')
         researches = await ResearchesORM.find_many()
+        tasks = []
 
         async with AsyncClient() as client:
-            tasks = [create_task(Scraper.run(client, research.search, research.channel_id)) 
-                        for research in researches]
+            for file in listdir('scrapers'):
+                if not file.startswith('_'):
+                    module = import_module(f'scrapers.{file}'.replace('.py', '').replace('/', '.'))
+                    tasks += [create_task(module.Scraper.run(client, research.search, research.channel_id)) 
+                            for research in researches]
 
             results = await gather(*tasks)
         
