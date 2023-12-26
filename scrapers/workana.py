@@ -33,18 +33,15 @@ class Scraper(Crawler):
     @classmethod
     async def run(cls, client: AsyncClient, search: str, channel_id: int):
         data = await cls.__scraping(cls, client, search, 1, channel_id, [])
-        # print(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1w&query={search}&page=1')
-        # print(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1d&query={search}&page=1')
-        # print(len(data))
         return data
 
 
     async def __scraping(cls, client: AsyncClient, search: str, page: int, channel_id: int, data: list):
-        response = await client.get(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1w&query={search}&page={page}', timeout = 600)
-        # response = await client.get(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&publication=1d&query={search}&page={page}', timeout = 600)
-
+        response = await client.get(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&query={search}&page={page}&publication=1w', timeout = 600)
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('div', class_ = 'project-item')
+
+        if not projects: return data
 
         for project in projects:
             payload = {}
@@ -77,6 +74,6 @@ class Scraper(Crawler):
         pagination = soup.find('ul', class_ = 'pagination')
         active = pagination.find('li', 'active')
         pages = pagination.find_all('li')
-
+        
         if not active: return data
         return data if active.text == pages[-1].text else await cls.__scraping(cls, client, search, page + 1, channel_id, data)

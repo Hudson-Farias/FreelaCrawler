@@ -32,8 +32,11 @@ class Crawlling(Cog):
     async def crawler(self):
         print('rodando')
         researches = await ResearchesORM.find_many()
-        tasks = []
 
+        tasks = [self.delete_messages(research.channel_id) for research in researches]
+        await gather(*tasks)
+
+        tasks = []
         async with AsyncClient() as client:
             for file in listdir('scrapers'):
                 if not file.startswith('_'):
@@ -48,10 +51,12 @@ class Crawlling(Cog):
             
         tasks = [create_task(self.sender_embed(i)) for i in data]
         await gather(*tasks)
+        print('='*30)
 
 
     async def sender_embed(self, payload):
         channel = self.bot.get_channel(payload['channel_id'])
+
         embed = Embed()
 
         embed.title = payload['title']
@@ -63,6 +68,11 @@ class Crawlling(Cog):
 
         await channel.send(embed = embed)
 
+
+    async def delete_messages(self, channel_id):
+        channel = self.bot.get_channel(channel_id)
+        await channel.purge(limit = 1000)
+        
 
 def setup(bot):
     bot.add_cog(Crawlling(bot))
