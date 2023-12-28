@@ -18,23 +18,6 @@ git clone https://github.com/Hudson-Farias/FreelaCrawler.git
 cd FreelaCrawler
 ```
 
-1. Crie e ative um ambiente virtual usando venv:
-
-```bash
-python3 -m venv venv
-```
-No Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-No macOS e Linux:
-
-```bash
-source venv/bin/activate
-```
-
 Configuração do Python com asdf:
 
 Certifique-se de ter o plugin python instalado:
@@ -53,6 +36,23 @@ Defina a versão do Python no seu ambiente do projeto:
 
 ```bash
 asdf local python 3.11.6
+```
+
+1. Crie e ative um ambiente virtual usando venv:
+
+```bash
+python3 -m venv venv
+```
+No Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+No macOS e Linux:
+
+```bash
+source venv/bin/activate
 ```
 
 2. Instale as dependências do projeto:
