@@ -21,4 +21,4 @@ def cogs(path = 'cogs'):
                 
 if __name__ == '__main__':
     cogs()
-    client.run(getenv('DISCORD_TOKEN'))
+    client.run(getenv('DISCORD_BOT_TOKEN'))
