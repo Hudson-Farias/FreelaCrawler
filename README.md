@@ -66,7 +66,7 @@ pip install -r requirements.txt
 ```
 
 ## Executando o Projeto
-Antes de executar o projeto, crie os seguintes arquivos com base nos exemplos fornecidos:
+Antes de executar o projeto, ajuste as credenciais nos arquivos de configurações:
 
 ```bash
 cp .env.example .env
