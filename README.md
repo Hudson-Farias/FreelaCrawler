@@ -66,7 +66,12 @@ pip install -r requirements.txt
 ```
 
 ## Executando o Projeto
-Certifique-se de ter configurado suas credenciais para as plataformas de freelancers e o token do Discord antes de executar o projeto. Edite os arquivos apropriados para inserir essas informações.
+Antes de executar o projeto, crie os seguintes arquivos com base nos exemplos fornecidos:
+
+```bash
+cp .env.example .env
+cp alembic.example alembic.ini
+```
 
 Para rodar o projeto, execute:
 
