@@ -1,6 +1,6 @@
 [alembic]
 script_location = alembic
-sqlalchemy.url = {DB_URL}
+sqlalchemy.url = mysql+mysqlconnector://database_url
 
 [loggers]
 keys = root

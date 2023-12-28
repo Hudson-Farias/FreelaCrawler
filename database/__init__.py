@@ -9,33 +9,12 @@ from os import getenv
 
 load_dotenv()
 
-SSL = getenv('SSL')
-PROTOCOL = getenv('PROTOCOL')
-CONNECTOR = getenv('CONNECTOR_ASYNC')
-PROTOCOL = getenv('PROTOCOL')
-USERNAME = getenv('DB_USERNAME')
-PASSWORD = getenv('DB_PASSWORD')
-HOST = getenv('DB_HOST')
-DB = getenv('DB_NAME')
-
-SQL_URL =  f'{PROTOCOL}{CONNECTOR}://'
-
-if USERNAME and PASSWORD: SQL_URL += f'{USERNAME}:{PASSWORD}@'
-
-SQL_URL += f'{HOST}'
-
-if DB: SQL_URL += f'/{DB}'
-
-connect_args = {}
-
-if SSL: connect_args['ssl'] =  create_default_context(cafile = SSL)
-
+DB_URL = getenv('DB_URL')
 
 engine = create_async_engine(
-    SQL_URL, 
+    DB_URL, 
     connect_args = connect_args,
-    pool_pre_ping = True, 
-    # echo = True
+    pool_pre_ping = True
 )
 
 AsyncSessionLocal = sessionmaker(engine, expire_on_commit = False, class_ = AsyncSession)
