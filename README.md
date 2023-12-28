@@ -65,10 +65,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Executando o Projeto
+## Executando o Projeto
 Certifique-se de ter configurado suas credenciais para as plataformas de freelancers e o token do Discord antes de executar o projeto. Edite os arquivos apropriados para inserir essas informações.
 
 Para rodar o projeto, execute:
 
 ```bash
 python main.py
+```
