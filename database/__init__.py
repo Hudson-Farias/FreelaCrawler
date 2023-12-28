@@ -10,6 +10,10 @@ from os import getenv
 load_dotenv()
 
 DB_URL = getenv('DB_URL')
+SSL = getenv('SSL')
+
+connect_args = {}
+if SSL: connect_args['ssl'] =  create_default_context(cafile = SSL)
 
 engine = create_async_engine(
     DB_URL, 
