@@ -29,14 +29,8 @@ class Scraper(Crawler):
     url_base = 'https://www.workana.com'
     urls = []
 
-
-    @classmethod
-    async def run(cls, client: AsyncClient, search: str, channel_id: int):
-        data = await cls.__scraping(cls, client, search, 1, channel_id, [])
-        return data
-
-
-    async def __scraping(cls, client: AsyncClient, search: str, page: int, channel_id: int, data: list):
+    @staticmethod
+    async def _scraping(cls, client: AsyncClient, search: str, channel_id: int, page: int, data: list):
         response = await client.get(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&query={search}&page={page}&publication=1w', timeout = 600)
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('div', class_ = 'project-item')
@@ -76,4 +70,4 @@ class Scraper(Crawler):
         pages = pagination.find_all('li')
         
         if not active: return data
-        return data if active.text == pages[-1].text else await cls.__scraping(cls, client, search, page + 1, channel_id, data)
+        return data if active.text == pages[-1].text else await cls.__scraping(cls, client, search, channel_id, page + 1, data)

@@ -9,13 +9,7 @@ class Scraper(Crawler):
     urls = []
 
 
-    @classmethod
-    async def run(cls, client: AsyncClient, search: str, channel_id: int):
-        data = await cls.__scraping(cls, client, search, 1, channel_id, [])
-        return data
-
-
-    async def __scraping(cls, client: AsyncClient, _search: str, page: int, channel_id: int, data: list):
+    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int, page: int, data: list):
         response = await client.get(f'{cls.url_base}/projects?q={_search}&page={page}', timeout = 600)
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -51,4 +45,4 @@ class Scraper(Crawler):
         active = pagination.find('span', class_ = 'selected')
         pages = pagination.find_all('span')
 
-        return data if active.text == pages[-1].text else await cls.__scraping(cls, client, _search, page + 1, channel_id, data)
+        return data if active.text == pages[-1].text else await cls._scraping(cls, client, _search, channel_id, page + 1, data)

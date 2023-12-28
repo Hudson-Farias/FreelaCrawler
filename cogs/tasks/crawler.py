@@ -13,7 +13,7 @@ from database.researches import ResearchesORM
 now = datetime.now()
 
 times = [
-    (now + timedelta(hours = 3, seconds = 10) - timedelta(microseconds = now.microsecond)).time(),
+    # (now + timedelta(hours = 3, seconds = 10) - timedelta(microseconds = now.microsecond)).time(),
     time(10, 0, 0)
 ]
 
