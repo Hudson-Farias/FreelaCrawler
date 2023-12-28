@@ -35,14 +35,7 @@ No macOS e Linux:
 source venv/bin/activate
 ```
 
-2. Instale as dependências do projeto:
-
-```bash
-pip install -r requirements.txt
-```
-
-Configuração do Python com asdf
-Se você estiver utilizando o gerenciador de versões asdf para o Python:
+Configuração do Python com asdf:
 
 Certifique-se de ter o plugin python instalado:
 
@@ -60,6 +53,12 @@ Defina a versão do Python no seu ambiente do projeto:
 
 ```bash
 asdf local python 3.11.6
+```
+
+2. Instale as dependências do projeto:
+
+```bash
+pip install -r requirements.txt
 ```
 
 Executando o Projeto
