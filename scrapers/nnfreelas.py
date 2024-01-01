@@ -5,12 +5,12 @@ from bs4 import BeautifulSoup
 from re import search
 
 class Scraper(Crawler):
-    url_base = 'https://www.99freelas.com.br'
-    urls = []
+    url = 'https://www.99freelas.com.br'
+    platform = '99freelas'
 
 
-    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int, page: int, data: list):
-        response = await client.get(f'{cls.url_base}/projects?q={_search}&page={page}', timeout = 600)
+    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int):
+        response = await cls.request(cls, client, f'/projects?q={_search}&page={cls.page}')
 
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('li', class_ = 'result-item')
@@ -21,7 +21,7 @@ class Scraper(Crawler):
             element = project.find('h1', class_ = 'title')
 
             payload['title'] = element.text.strip()
-            payload['link'] = cls.url_base + element.find('a').get('href').strip().replace(f'?ref=projects_{page}', '')
+            payload['link'] = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{cls.page}', '')
 
             timestamp = int(int(project.find('b', class_ = 'datetime').get('cp-datetime')) / 1000)
             payload['description'] = f'**Publicado**: <t:{timestamp}:R>\n'
@@ -36,13 +36,14 @@ class Scraper(Crawler):
             
             if payload['link'] in cls.urls: continue
 
-            data.append(payload)
+            cls.data.append(payload)
             cls.urls.append(payload['link'])
 
         pagination = soup.find('div', class_ = 'pagination-component')
-        if not pagination: return data
+        if not pagination: return cls.data
 
         active = pagination.find('span', class_ = 'selected')
         pages = pagination.find_all('span')
 
-        return data if active.text == pages[-1].text else await cls._scraping(cls, client, _search, channel_id, page + 1, data)
+        isLastPage = active.text == pages[-1].text
+        return isLastPage

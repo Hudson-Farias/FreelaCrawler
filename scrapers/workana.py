@@ -26,16 +26,17 @@ def translate(date: str):
     return date
 
 class Scraper(Crawler):
-    url_base = 'https://www.workana.com'
-    urls = []
+    url = 'https://www.workana.com'
+    platform = 'workana'
 
     @staticmethod
-    async def _scraping(cls, client: AsyncClient, search: str, channel_id: int, page: int, data: list):
-        response = await client.get(f'{cls.url_base}/pt/jobs?category=it-programming&language=pt&query={search}&page={page}&publication=1w', timeout = 600)
+    async def _scraping(cls, client: AsyncClient, search: str, channel_id: int):
+        response = await cls.request(cls, client, f'/pt/jobs?category=it-programming&language=pt&query={search}&page={cls.page}&publication=1w')
+        
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('div', class_ = 'project-item')
 
-        if not projects: return data
+        if not projects: return cls.data
 
         for project in projects:
             payload = {}
@@ -43,7 +44,7 @@ class Scraper(Crawler):
             element = project.find('h2', class_ = 'project-title')
 
             payload['title'] = element.text.strip()
-            payload['link'] = cls.url_base + element.find('a').get('href').strip().replace(f'?ref=projects_{page}', '')
+            payload['link'] = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{cls.page}', '')
             
 
             time = project.find('span', class_ = 'date').get('title').lower()
@@ -62,12 +63,12 @@ class Scraper(Crawler):
             
             if payload['link'] in cls.urls: continue
 
-            data.append(payload)
+            cls.data.append(payload)
             cls.urls.append(payload['link'])
 
         pagination = soup.find('ul', class_ = 'pagination')
         active = pagination.find('li', 'active')
         pages = pagination.find_all('li')
-        
-        if not active: return data
-        return data if active.text == pages[-1].text else await cls.__scraping(cls, client, search, channel_id, page + 1, data)
+
+        isLastPage = isLastPage = active.text == pages[-1].text if active else True
+        return isLastPage

@@ -46,12 +46,12 @@ class Crawlling(Cog):
 
             results = await gather(*tasks)
         
-        data = []
-        for i in results: data += i
+        # data = []
+        # for i in results: data += i
             
-        tasks = [create_task(self.sender_embed(i)) for i in data]
-        await gather(*tasks)
-        print('='*30)
+        # tasks = [create_task(self.sender_embed(i)) for i in data]
+        # await gather(*tasks)
+        # print('='*30)
 
 
     async def sender_embed(self, payload):

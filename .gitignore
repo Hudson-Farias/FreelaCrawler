@@ -2,3 +2,5 @@ alembic.ini
 .env
 venv
 **__pycache__**
+log/html/*
+log/json/*

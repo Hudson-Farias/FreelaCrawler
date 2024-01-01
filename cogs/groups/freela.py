@@ -14,14 +14,10 @@ class Freela(Cog):
     @group.command()
     async def add(self, inter: Interaction, search: str, channel: Option(GuildChannel, required = False)):
         channel = channel or inter.channel
-        message = f'{channel.mention} não pertence à ***<#1186769104359669852>***'
 
-        if channel.category.id == 1186769104359669852:
-            message = f'Pesquisa "***{search}***" foi adicionada a lista'
-            await ResearchesORM.create(search = search, channel_id = channel.id)
-            await dashboard(self.bot)
-
-        await inter.response.send_message(message, ephemeral = True)
+        message = f'Pesquisa "***{search}***" foi adicionada a lista'
+        await ResearchesORM.create(search = search, channel_id = channel.id)
+        await dashboard(self.bot)
     
 def setup(bot):
     bot.add_cog(Freela(bot))
