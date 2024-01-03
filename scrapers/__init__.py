@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from httpx import AsyncClient
 from asyncio import create_task, gather
-
+from typing import Union, List
+from models.job import Job
 from utils.json import json_creater
 
 class Crawler(ABC):
@@ -17,19 +18,20 @@ class Crawler(ABC):
         if not cls.url: raise NotImplementedError('Unspecified url')
         if not cls.platform: raise NotImplementedError('Unspecified platform')
 
-        cls.data = []
+        cls.data: List[Job] = []
         cls.page = 1
-
-        await cls._scraping(cls, *args, **kwargs)
         
-        # isLastPage = False
-        # while not isLastPage:
-        #     try: isLastPage = await cls._scraping(cls, *args, **kwargs)
-        #     except Exception as e:
-        #         with open(f'log/html/{cls.platform}-{cls.page}.html', 'w+', encoding = 'utf-8') as file: file.write(cls.page_text)
-        #         print(e)
-        #         break
-            
+        await cls._scraping(cls, *args, **kwargs)
+        return cls.data
+        
+        isLastPage = False
+        while not isLastPage:
+            try: isLastPage = await cls._scraping(cls, *args, **kwargs)
+            except Exception as e:
+                with open(f'log/html/{cls.platform}-{cls.page}.html', 'w+', encoding = 'utf-8') as file: file.write(cls.page_text)
+                print(e)
+                print(type(e))
+                break
         return cls.data
 
 
@@ -43,5 +45,15 @@ class Crawler(ABC):
         cls.page += 1
         return response
 
+
+    def add_work(cls, job: Union[Job, dict]):
+        if isinstance(job, dict): job = Job(**job)
+
+        if job.link in cls.urls: return
+        cls.urls.append(job.link)
+        cls.data.append(job)
+
     
-    def json(cls): json_creater(cls.data, f'log/json/{cls.platform}.json')
+    def json(cls):
+        data = [job.dict() for job in cls.data]
+        json_creater(data, f'log/json/{cls.platform}.json')

@@ -4,6 +4,8 @@ from httpx import AsyncClient
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+from models.job import Job
+
 mounths = {
     'janeiro': 'January',
     'fevereiro': 'February',
@@ -27,7 +29,8 @@ def translate(date: str):
 
 class Scraper(Crawler):
     url = 'https://www.workana.com'
-    platform = 'workana'
+    platform = 'Workana'
+
 
     @staticmethod
     async def _scraping(cls, client: AsyncClient, search: str, channel_id: int):
@@ -39,32 +42,26 @@ class Scraper(Crawler):
         if not projects: return cls.data
 
         for project in projects:
-            payload = {}
+            job = Job()
 
             element = project.find('h2', class_ = 'project-title')
 
-            payload['title'] = element.text.strip()
-            payload['link'] = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{cls.page}', '')
+            job.title = element.text.strip()
+            job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{cls.page}', '')
             
-
             time = project.find('span', class_ = 'date').get('title').lower()
             time = translate(time)
             timestamp = int(datetime.strptime(time, '%d de %B de %Y %H:%M').timestamp())
-            payload['description'] = f'**Publicado**: <t:{timestamp}:R>\n'
+            job.description = f'**Publicado**: <t:{timestamp}:R>\n'
 
-            payload['description'] += '**Propostas**: ' + project.find('span', class_ = 'bids').text.strip().replace('Propostas: ', '') + '\n'
+            job.description += '**Propostas**: ' + project.find('span', class_ = 'bids').text.strip().replace('Propostas: ', '') + '\n'
 
-            # payload['description'] = project.find('div', class_ = 'project-details').text.strip()
+            job.footer = f'{cls.platform}: ' + project.find('span', class_ = 'values').text.strip()
 
-            payload['footer'] = 'Workana: ' + project.find('span', class_ = 'values').text.strip()
-
-            payload['icon'] = soup.find('link', rel='icon').get('href')
-            payload['channel_id'] = channel_id
-            
-            if payload['link'] in cls.urls: continue
-
-            cls.data.append(payload)
-            cls.urls.append(payload['link'])
+            job.icon = soup.find('link', rel='icon').get('href')
+            job.channel_id = channel_id
+        
+            cls.add_work(cls, job)
 
         pagination = soup.find('ul', class_ = 'pagination')
         active = pagination.find('li', 'active')

@@ -4,44 +4,38 @@ from httpx import AsyncClient
 from bs4 import BeautifulSoup
 from re import search
 
+from models.job import Job
+
 class Scraper(Crawler):
     url = 'https://www.freelancer.com'
-    platform = 'freelancer'
+    platform = 'Freelancer'
 
 
     async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int):
         path = '/jobs' if cls.page == 1 else f'/jobs/{cls.page}'
         response = await cls.request(cls, client, f'{path}?keyword={_search}')
 
-        print(f'{cls.url}{path}?keyword={_search}')
-
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('div', class_ = 'JobSearchCard-item')
 
         for project in projects:
-            payload = {}
+            job = Job()
 
             element = project.find('a', class_ = 'JobSearchCard-primary-heading-link')
 
-            payload['title'] = element.text.strip()
-            payload['link'] = cls.url + element.get('href')
-
-            # timestamp = int(int(project.find('b', class_ = 'datetime').get('cp-datetime')) / 1000)
-            # payload['description'] = f'**Publicado**: <t:{timestamp}:R>\n'
+            job.title = element.text.strip()
+            job.link = cls.url + element.get('href')
 
             bids_element = project.find('div', class_ = 'JobSearchCard-secondary-entry')
             if not bids_element: continue
-            payload['description'] = '**Propostas**: ' + bids_element.text.replace(' bids', '')
+            job.description = '**Propostas**: ' + bids_element.text.replace(' bids', '')
 
-            payload['footer'] = cls.platform
+            job.footer = cls.platform
 
-            payload['icon'] = soup.find('link', rel='icon').get('href')
-            payload['channel_id'] = channel_id
-            
-            if payload['link'] in cls.urls: continue
+            job.icon = soup.find('link', rel='icon').get('href')
+            job.channel_id = channel_id
 
-            cls.data.append(payload)
-            cls.urls.append(payload['link'])
+            cls.add_work(cls, job)
 
         pagination = soup.find('div', id = 'bottom-pagination')
 
