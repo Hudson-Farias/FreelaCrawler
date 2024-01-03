@@ -18,6 +18,7 @@ class Freela(Cog):
         message = f'Pesquisa "***{search}***" foi adicionada a lista'
         await ResearchesORM.create(search = search, channel_id = channel.id)
         await dashboard(self.bot)
+        await inter.channel.send(message)
     
 def setup(bot):
     bot.add_cog(Freela(bot))

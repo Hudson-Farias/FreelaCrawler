@@ -11,8 +11,6 @@ class Crawler(ABC):
     page_text = ''
 
     urls = []
-    data = []
-    page = 1
 
     @classmethod
     async def run(cls, *args, **kwargs):
@@ -22,13 +20,16 @@ class Crawler(ABC):
         cls.data = []
         cls.page = 1
 
-        isLastPage = False
-        while not isLastPage:
-            try: isLastPage = await cls._scraping(cls, *args, **kwargs)
-            except Exception as e:
-                with open(f'log/html/{cls.platform}-{cls.page}.html', 'w+', encoding = 'utf-8') as file: file.write(response.text)
-                break
+        await cls._scraping(cls, *args, **kwargs)
         
+        # isLastPage = False
+        # while not isLastPage:
+        #     try: isLastPage = await cls._scraping(cls, *args, **kwargs)
+        #     except Exception as e:
+        #         with open(f'log/html/{cls.platform}-{cls.page}.html', 'w+', encoding = 'utf-8') as file: file.write(cls.page_text)
+        #         print(e)
+        #         break
+            
         return cls.data
 
 

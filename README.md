@@ -63,6 +63,7 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+playwright install  
 ```
 
 ## Executando o Projeto
@@ -76,5 +77,5 @@ cp alembic.example alembic.ini
 Para rodar o projeto, execute:
 
 ```bash
-python main.py
+python bot.py
 ```

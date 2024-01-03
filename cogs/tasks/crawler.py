@@ -4,18 +4,11 @@ from discord.ext.tasks import loop
 
 from asyncio import create_task, gather
 from httpx import AsyncClient
-from datetime import datetime, timedelta, time
+from datetime import time
 from importlib import import_module
 from os import listdir
 
 from database.researches import ResearchesORM
-
-now = datetime.now()
-
-times = [
-    (now + timedelta(hours = 3, seconds = 10) - timedelta(microseconds = now.microsecond)).time(),
-    time(10, 0, 0)
-]
 
 class Crawlling(Cog):
     def __init__(self, bot: Client):
@@ -24,12 +17,18 @@ class Crawlling(Cog):
 
     @Cog.listener('on_ready')
     async def ready(self):
+        await self.crawling()
+
         self.crawler.start()
         print('Loop: Crawler iniciado')
 
 
-    @loop(time = times)
+    @loop(time = time(10, 0, 0))
     async def crawler(self):
+        await self.crawling()
+        
+
+    async def crawling(self):
         print('rodando')
         researches = await ResearchesORM.find_many()
 
@@ -38,20 +37,20 @@ class Crawlling(Cog):
 
         tasks = []
         async with AsyncClient() as client:
-            for file in listdir('scrapers'):
+            for file in listdir('scrapers/freelancers'):
                 if not file.startswith('_'):
-                    module = import_module(f'scrapers.{file}'.replace('.py', '').replace('/', '.'))
+                    module = import_module(f'scrapers.freelancers.{file}'.replace('.py', '').replace('/', '.'))
                     tasks += [create_task(module.Scraper.run(client, research.search, research.channel_id)) 
                             for research in researches]
 
             results = await gather(*tasks)
         
-        # data = []
-        # for i in results: data += i
+        data = []
+        for i in results: data += i
             
-        # tasks = [create_task(self.sender_embed(i)) for i in data]
-        # await gather(*tasks)
-        # print('='*30)
+        tasks = [create_task(self.sender_embed(i)) for i in data]
+        await gather(*tasks)
+        print('='*30)
 
 
     async def sender_embed(self, payload):
