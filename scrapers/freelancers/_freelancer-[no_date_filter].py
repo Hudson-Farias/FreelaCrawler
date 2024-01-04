@@ -11,8 +11,8 @@ class Scraper(Crawler):
     platform = 'Freelancer'
 
 
-    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int):
-        path = '/jobs' if cls.page == 1 else f'/jobs/{cls.page}'
+    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int, _page: int = 1):
+        path = '/jobs' if _page == 1 else f'/jobs/{_page}'
         response = await cls.request(cls, client, f'{path}?keyword={_search}')
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -35,12 +35,13 @@ class Scraper(Crawler):
             job.icon = soup.find('link', rel='icon').get('href')
             job.channel_id = channel_id
 
-            cls.add_work(cls, job)
+            cls.add_work(cls, job, 'freelancer')
 
         pagination = soup.find('div', id = 'bottom-pagination')
 
         active = pagination.find('a', class_ = 'is-active')
         pages = [e for e in pagination.find_all('a') if e.text.isdigit()]
 
-        isLastPage = active.text == pages[-1].text
-        return isLastPage
+        if active.text != pages[-1].text:
+            print(f'[{cls.platform}] {search}: {_page}')
+            await _scraping(cls, client, _search, channel_id, _page + 1)

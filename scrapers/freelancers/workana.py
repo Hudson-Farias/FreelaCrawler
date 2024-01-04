@@ -33,13 +33,13 @@ class Scraper(Crawler):
 
 
     @staticmethod
-    async def _scraping(cls, client: AsyncClient, search: str, channel_id: int):
-        response = await cls.request(cls, client, f'/pt/jobs?category=it-programming&language=pt&query={search}&page={cls.page}&publication=1w')
+    async def _scraping(cls, client: AsyncClient, search: str, channel_id: int, _page: int = 1):
+        response = await cls.request(cls, client, f'/pt/jobs?category=it-programming&language=pt&query={search}&page={_page}&publication=1w', search)
         
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('div', class_ = 'project-item')
 
-        if not projects: return cls.data
+        if not projects: return
 
         for project in projects:
             job = Job()
@@ -47,7 +47,7 @@ class Scraper(Crawler):
             element = project.find('h2', class_ = 'project-title')
 
             job.title = element.text.strip()
-            job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{cls.page}', '')
+            job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{_page}', '')
             
             time = project.find('span', class_ = 'date').get('title').lower()
             time = translate(time)
@@ -61,11 +61,16 @@ class Scraper(Crawler):
             job.icon = soup.find('link', rel='icon').get('href')
             job.channel_id = channel_id
         
-            cls.add_work(cls, job)
+            cls.add_work(cls, job, 'freelancer')
 
         pagination = soup.find('ul', class_ = 'pagination')
         active = pagination.find('li', 'active')
         pages = pagination.find_all('li')
 
-        isLastPage = isLastPage = active.text == pages[-1].text if active else True
-        return isLastPage
+        if not active:
+            print(f'[{cls.platform}] {search}: {_page}')
+            return
+            
+        if active.text != pages[-1].text:
+            print(f'[{cls.platform}] {search}: {_page}')
+            await cls._scraping(cls, client, search, channel_id, _page +1)

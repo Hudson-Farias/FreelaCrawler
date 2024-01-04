@@ -11,8 +11,8 @@ class Scraper(Crawler):
     platform = '99freelas'
 
 
-    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int):
-        response = await cls.request(cls, client, f'/projects?q={_search}&page={cls.page}')
+    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int, _page: int = 1):
+        response = await cls.request(cls, client, f'/projects?q={_search}&page={_page}', _search)
 
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('li', class_ = 'result-item')
@@ -23,7 +23,7 @@ class Scraper(Crawler):
             element = project.find('h1', class_ = 'title')
 
             job.title = element.text.strip()
-            job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{cls.page}', '')
+            job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{_page}', '')
 
             timestamp = int(int(project.find('b', class_ = 'datetime').get('cp-datetime')) / 1000)
             job.description = f'**Publicado**: <t:{timestamp}:R>\n'
@@ -36,13 +36,14 @@ class Scraper(Crawler):
             job.icon = soup.find('link', rel='icon').get('href')
             job.channel_id = channel_id
 
-            cls.add_work(cls, job)
+            cls.add_work(cls, job, 'freelancer')
 
         pagination = soup.find('div', class_ = 'pagination-component')
-        if not pagination: return cls.data
+        if not pagination: return
 
         active = pagination.find('span', class_ = 'selected')
         pages = pagination.find_all('span')
 
-        isLastPage = active.text == pages[-1].text
-        return isLastPage
+        if active.text != pages[-1].text:
+            print(f'[{cls.platform}] {_search}: {_page} pages')
+            await cls._scraping(cls, client, _search, channel_id, _page + 1)

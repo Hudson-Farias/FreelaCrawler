@@ -54,9 +54,7 @@ class Scraper(Crawler):
             requirements = findall(pattern, text, IGNORECASE)
 
             payload.description = ''
-            if requirements: cls.add_work(cls, payload)
-
-        return True
+            if requirements: cls.add_work(cls, payload, 'fulltime')
 
 
     async def __request_job_infos(cls, client: AsyncClient, url: str):

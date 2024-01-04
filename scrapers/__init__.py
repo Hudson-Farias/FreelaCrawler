@@ -1,59 +1,67 @@
 from abc import ABC, abstractmethod
 from httpx import AsyncClient
 from asyncio import create_task, gather
-from typing import Union, List
+from typing import Union, List, Literal
 from models.job import Job
 from utils.json import json_creater
+
+from os.path import exists
+from os import makedirs
+
+urls = []
+data: List[Job] = {
+    'freelancer': [],
+    'fulltime': [],
+}
 
 class Crawler(ABC):
     url = ''
     platform = ''
 
+    search = ''
     page_text = ''
-
-    urls = []
 
     @classmethod
     async def run(cls, *args, **kwargs):
         if not cls.url: raise NotImplementedError('Unspecified url')
         if not cls.platform: raise NotImplementedError('Unspecified platform')
-
-        cls.data: List[Job] = []
-        cls.page = 1
         
         await cls._scraping(cls, *args, **kwargs)
-        return cls.data
-        
-        isLastPage = False
-        while not isLastPage:
-            try: isLastPage = await cls._scraping(cls, *args, **kwargs)
-            except Exception as e:
-                with open(f'log/html/{cls.platform}-{cls.page}.html', 'w+', encoding = 'utf-8') as file: file.write(cls.page_text)
-                print(e)
-                print(type(e))
-                break
-        return cls.data
 
 
     @abstractmethod
     async def _scraping(cls, *args, **kwargs): pass
 
     
-    async def request(cls, client: AsyncClient, path_url: str):
+    async def request(cls, client: AsyncClient, path_url: str, search: str = ''):
         response = await client.get(cls.url + path_url, timeout = 600)
-        cls.page_text = response.text        
-        cls.page += 1
+        cls.page_text = response.text
+        cls.search = search
+        cls.html(cls)
+
         return response
 
 
-    def add_work(cls, job: Union[Job, dict]):
+    def add_work(cls, job: Union[Job, dict], type: Literal['freelancer', 'fulltime']):
         if isinstance(job, dict): job = Job(**job)
 
-        if job.link in cls.urls: return
-        cls.urls.append(job.link)
-        cls.data.append(job)
+        if job.link in urls: return
+        urls.append(job.link)
+        data[type].append(job)
+
+
+    def html(cls):
+        path = f'log/html/{cls.platform}'
+        if not exists(path): makedirs(path)
+
+        with open(f'{path}/{cls.search}.html', 'w+', encoding = 'utf-8') as file: 
+            file.write(cls.page_text)
 
     
     def json(cls):
         data = [job.dict() for job in cls.data]
         json_creater(data, f'log/json/{cls.platform}.json')
+
+
+def get_jobs(type: Literal['freelancer', 'fulltime']):
+    return data[type]

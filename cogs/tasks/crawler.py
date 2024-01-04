@@ -4,11 +4,13 @@ from discord.ext.tasks import loop
 
 from asyncio import create_task, gather
 from httpx import AsyncClient
-from datetime import time
 from importlib import import_module
 from os import listdir
+from datetime import time
 
 from database.researches import ResearchesORM
+from models.job import Job
+from scrapers import get_jobs
 
 class Crawlling(Cog):
     def __init__(self, bot: Client):
@@ -39,31 +41,30 @@ class Crawlling(Cog):
         async with AsyncClient() as client:
             for file in listdir('scrapers/freelancers'):
                 if not file.startswith('_'):
+                    print(file)
                     module = import_module(f'scrapers.freelancers.{file}'.replace('.py', '').replace('/', '.'))
+
                     tasks += [create_task(module.Scraper.run(client, research.search, research.channel_id)) 
                             for research in researches]
 
-            results = await gather(*tasks)
+            await gather(*tasks)
         
-        data = []
-        for i in results: data += i
-            
-        tasks = [create_task(self.sender_embed(i)) for i in data]
+        tasks = [create_task(self.sender_embed(i)) for i in get_jobs('freelancer')]
         await gather(*tasks)
         print('='*30)
 
 
-    async def sender_embed(self, payload):
-        channel = self.bot.get_channel(payload['channel_id'])
+    async def sender_embed(self, job: Job):
+        channel = self.bot.get_channel(job.channel_id)
 
         embed = Embed()
 
-        embed.title = payload['title']
-        embed.url = payload['link']
+        embed.title = job.title
+        embed.url = job.link
         embed.description = 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
-        embed.description += payload['description']
+        embed.description += job.description
         embed.description += 'ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ'
-        embed.set_footer(text = payload['footer'], icon_url = payload['icon'])
+        embed.set_footer(text = job.footer, icon_url = job.icon)
 
         await channel.send(embed = embed)
 
