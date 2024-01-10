@@ -5,3 +5,4 @@ venv
 log/html/*
 log/json/*
 output.json
+log.json

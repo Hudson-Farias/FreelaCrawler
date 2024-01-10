@@ -8,18 +8,35 @@ from re import findall, escape, IGNORECASE
 
 from models.job import Job
 
+tools = [
+    'react', 
+    'python', 
+    'typescript', 
+    'next', 
+    'fastapi', 
+    'selenium', 
+    'webscraping', 
+    'playwright'
+]
+
 class Scraper(Crawler):
     url = 'https://www.linkedin.com'
     platform = 'Linkedin'
 
-    blacklist = ['GeekHunter', 'Netvagas']
+    blacklist = ['GeekHunter', 'Netvagas', 'BNE - Banco Nacional de Empregos']
     scroll_position = 0
 
     @staticmethod
-    async def _scraping(cls, page: Page, client: AsyncClient, search: str, channel_id: int, strings: list = [], is_remote: bool = True):
+    async def _scraping(cls, page: Page, client: AsyncClient, channel_id: int, is_remote: bool = True):
+        search = '("Desenvolvedor" OR "Programador") AND ("Pleno" OR "PL") AND ("Python" OR "Typescript" OR "Javascript")'
+        
         url = f'{cls.url}/jobs/search/?location=Brasil&geoId=106057199&keywords={search}'
-        url += '&f_TPR=r86400' # últimas 24 horas
 
+        last_day = '&f_TPR=r86400'
+        last_week = '&f_TPR=r604800'
+
+        url +=  last_day if cls.last_used() == 1 else last_week
+        
         if is_remote: url += '&f_WT=2'
         else: 
             url += '&f_PP=106701406' # RJ
@@ -27,6 +44,8 @@ class Scraper(Crawler):
         
         await page.goto(url)
         await cls.__scroll(cls, page)
+        print('[Linkedin] scroll ending')
+
         jobs = await page.query_selector_all('.jobs-search__results-list li')
 
         for i, job in enumerate(jobs):            
@@ -34,14 +53,13 @@ class Scraper(Crawler):
             if company_name in cls.blacklist: continue
             
             url  = await (await job.query_selector('a')).get_attribute('href')
-            if url in cls.urls: continue
 
             response = await cls.__request_job_infos(cls, client, url)
             soup = BeautifulSoup(response.text, 'html.parser')
             
             payload = Job()
             payload.title = soup.find('h1', class_ = 'top-card-layout__title').text.strip()
-            print(payload.title)
+            print(f'[Linkedin] {payload.title}')
             payload.link = url
             payload.description = soup.find('div', class_ = 'show-more-less-html__markup').text.strip()
 
@@ -50,11 +68,13 @@ class Scraper(Crawler):
             payload.channel_id = channel_id
             
             text = payload.title  + '\n' + payload.description
-            pattern = '|'.join(escape(s) for s in strings)
+            pattern = '|'.join(escape(s) for s in tools)
             requirements = findall(pattern, text, IGNORECASE)
 
             payload.description = ''
             if requirements: cls.add_work(cls, payload, 'fulltime')
+
+        print('[Linkedin] loop ending')
 
 
     async def __request_job_infos(cls, client: AsyncClient, url: str):

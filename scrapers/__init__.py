@@ -3,10 +3,14 @@ from httpx import AsyncClient
 from asyncio import create_task, gather
 from typing import Union, List, Literal
 from models.job import Job
-from utils.json import json_creater
+from utils.json import json_creater, json_load
 
+from datetime import datetime
 from os.path import exists
-from os import makedirs
+from os import makedirs, getenv
+from dotenv import load_dotenv
+
+load_dotenv()
 
 urls = []
 data: List[Job] = {
@@ -27,6 +31,9 @@ class Crawler(ABC):
         if not cls.platform: raise NotImplementedError('Unspecified platform')
         
         await cls._scraping(cls, *args, **kwargs)
+
+        now = datetime.now()
+        json_creater({'timestamp': int(now.timestamp())}, 'log.json')
 
 
     @abstractmethod
@@ -62,6 +69,17 @@ class Crawler(ABC):
         data = [job.dict() for job in cls.data]
         json_creater(data, f'log/json/{cls.platform}.json')
 
+
+    def last_used():
+        if getenv('use') != 'local': return 1
+
+        timestamp = json_load('log.json')['timestamp']
+        now = datetime.now()
+        date_timestamp = datetime.fromtimestamp(timestamp)
+
+        difference = now - date_timestamp
+
+        return difference.days
 
 def get_jobs(type: Literal['freelancer', 'fulltime']):
     return data[type]

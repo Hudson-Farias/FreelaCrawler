@@ -8,11 +8,11 @@ from importlib import import_module
 from os import listdir
 from datetime import time
 
-from database.researches import ResearchesORM
+from database.freelancers import FreelancersORM
 from models.job import Job
 from scrapers import get_jobs
 
-class Crawlling(Cog):
+class Freelancers(Cog):
     def __init__(self, bot: Client):
         self.bot = bot
 
@@ -20,9 +20,7 @@ class Crawlling(Cog):
     @Cog.listener('on_ready')
     async def ready(self):
         await self.crawling()
-
         self.crawler.start()
-        print('Loop: Crawler iniciado')
 
 
     @loop(time = time(10, 0, 0))
@@ -31,8 +29,8 @@ class Crawlling(Cog):
         
 
     async def crawling(self):
-        print('rodando')
-        researches = await ResearchesORM.find_many()
+        print('[Freelancer] running')
+        researches = await FreelancersORM.find_many()
 
         tasks = [self.delete_messages(research.channel_id) for research in researches]
         await gather(*tasks)
@@ -41,7 +39,6 @@ class Crawlling(Cog):
         async with AsyncClient() as client:
             for file in listdir('scrapers/freelancers'):
                 if not file.startswith('_'):
-                    print(file)
                     module = import_module(f'scrapers.freelancers.{file}'.replace('.py', '').replace('/', '.'))
 
                     tasks += [create_task(module.Scraper.run(client, research.search, research.channel_id)) 
@@ -51,7 +48,7 @@ class Crawlling(Cog):
         
         tasks = [create_task(self.sender_embed(i)) for i in get_jobs('freelancer')]
         await gather(*tasks)
-        print('='*30)
+        print('[Freelancer] ending')
 
 
     async def sender_embed(self, job: Job):
@@ -75,4 +72,4 @@ class Crawlling(Cog):
         
 
 def setup(bot):
-    bot.add_cog(Crawlling(bot))
+    bot.add_cog(Freelancers(bot))

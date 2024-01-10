@@ -34,7 +34,16 @@ class Scraper(Crawler):
 
     @staticmethod
     async def _scraping(cls, client: AsyncClient, search: str, channel_id: int, _page: int = 1):
-        response = await cls.request(cls, client, f'/pt/jobs?category=it-programming&language=pt&query={search}&page={_page}&publication=1w', search)
+        path = f'/pt/jobs?category=it-programming&language=pt&query={search}&page={_page}'
+
+        last_day = '&publication=1d'
+        last_3days = '&publication=3d'
+        last_week = '&publication=1w'
+
+        days = cls.last_used()
+        path +=  last_day if  days <= 1 else (last_3days if days <= 3 else last_week)
+
+        response = await cls.request(cls, client, path, search)
         
         soup = BeautifulSoup(response.text, 'html.parser')
         projects = soup.find_all('div', class_ = 'project-item')
@@ -67,10 +76,6 @@ class Scraper(Crawler):
         active = pagination.find('li', 'active')
         pages = pagination.find_all('li')
 
-        if not active:
-            print(f'[{cls.platform}] {search}: {_page}')
-            return
+        if not active: return
             
-        if active.text != pages[-1].text:
-            print(f'[{cls.platform}] {search}: {_page}')
-            await cls._scraping(cls, client, search, channel_id, _page +1)
+        if active.text != pages[-1].text: await cls._scraping(cls, client, search, channel_id, _page +1)

@@ -12,6 +12,15 @@ class Scraper(Crawler):
 
 
     async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int, _page: int = 1):
+        path = f'/projects?q={_search}&page={_page}'
+
+        last_day = '&data-da-publicacao=menos-de-24-horas-atras'
+        last_2days = '&data-da-publicacao=menos-de-3-dias-atras'
+
+        days = cls.last_used()
+        path +=  last_day if  days <= 1 else (last_2days if days <= 3 else '')
+
+        response = await cls.request(cls, client, path, search)
         response = await cls.request(cls, client, f'/projects?q={_search}&page={_page}', _search)
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -45,5 +54,4 @@ class Scraper(Crawler):
         pages = pagination.find_all('span')
 
         if active.text != pages[-1].text:
-            print(f'[{cls.platform}] {_search}: {_page} pages')
             await cls._scraping(cls, client, _search, channel_id, _page + 1)

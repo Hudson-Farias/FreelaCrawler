@@ -1,9 +1,9 @@
 from discord import Client, Embed
 
-from database.researches import ResearchesORM
+from database.freelancers import FreelancersORM
 
 async def dashboard(bot: Client):
-    researches = await ResearchesORM.find_many()
+    researches = await FreelancersORM.find_many()
     channel = await bot.fetch_channel(1187539924195483779)
     message = await channel.fetch_message(1187540417420476578)
 

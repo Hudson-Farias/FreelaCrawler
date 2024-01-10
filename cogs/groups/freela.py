@@ -2,7 +2,7 @@ from discord import Client, SlashCommandGroup, Interaction, Option
 from discord.ext.commands import Cog
 from discord.abc import GuildChannel
 
-from database.researches import ResearchesORM
+from database.freelancers import FreelancersORM
 from utils.dashboard import dashboard
 
 class Freela(Cog):
@@ -16,7 +16,7 @@ class Freela(Cog):
         channel = channel or inter.channel
 
         message = f'Pesquisa "***{search}***" foi adicionada a lista'
-        await ResearchesORM.create(search = search, channel_id = channel.id)
+        await FreelancersORM.create(search = search, channel_id = channel.id)
         await dashboard(self.bot)
         await inter.channel.send(message)
     
