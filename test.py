@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from scrapers.freelancers.nnfreelas import Scraper
 # from scrapers.freelancers.workana import Scraper
 
+# from scrapers.fulltime.catho import Scraper
 # from scrapers.fulltime.linkedin import Scraper
 
 load_dotenv()
@@ -18,19 +19,18 @@ search = 'Python'
 async def main():
     async with async_playwright() as p:
         async with AsyncClient() as client:
-            browser = await p.chromium.launch(headless = getenv('HEADLESS') == 'true')
+            browser = await p.chromium.launch(headless = True)
+            # browser = await p.chromium.launch(headless = getenv('HEADLESS') == 'true')
 
             params = {
-                # 'page': await browser.new_page(), 
+                'page': await browser.new_page(), 
                 'client': client, 
-                # 'search': search, 
-                '_search': search, 
+                'search': search, 
                 'channel_id': 1,
                 '_page': 1
             }
 
             await Scraper.run(**params)
-
             await browser.close()
 
 run(main())

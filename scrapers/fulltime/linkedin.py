@@ -28,10 +28,10 @@ class Scraper(Crawler):
 
     @staticmethod
     async def _scraping(cls, page: Page, client: AsyncClient, channel_id: int, is_remote: bool = True):
+        # search = '("RPA") AND ("Python")'
         search = '("Desenvolvedor" OR "Programador") AND ("Pleno" OR "PL") AND ("Python" OR "Typescript" OR "Javascript")'
         
         url = f'{cls.url}/jobs/search/?location=Brasil&geoId=106057199&keywords={search}'
-
         last_day = '&f_TPR=r86400'
         last_week = '&f_TPR=r604800'
 

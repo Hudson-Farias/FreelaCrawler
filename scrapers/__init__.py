@@ -18,6 +18,12 @@ data: List[Job] = {
     'fulltime': [],
 }
 
+use = getenv('USE')
+ended = {
+    'freelancer': False,
+    'fulltime': False,
+}
+
 class Crawler(ABC):
     url = ''
     platform = ''
@@ -31,9 +37,6 @@ class Crawler(ABC):
         if not cls.platform: raise NotImplementedError('Unspecified platform')
         
         await cls._scraping(cls, *args, **kwargs)
-
-        now = datetime.now()
-        json_creater({'timestamp': int(now.timestamp())}, 'log.json')
 
 
     @abstractmethod
@@ -71,7 +74,7 @@ class Crawler(ABC):
 
 
     def last_used():
-        if getenv('use') != 'local': return 1
+        if use != 'local': return 1
 
         timestamp = json_load('log.json')['timestamp']
         now = datetime.now()
@@ -81,5 +84,13 @@ class Crawler(ABC):
 
         return difference.days
 
+
 def get_jobs(type: Literal['freelancer', 'fulltime']):
+    if use == 'local':
+        ended[type] = True
+
+        if ended['fulltime'] and ended['freelancer']:
+            now = datetime.now()
+            json_creater({'timestamp': int(now.timestamp())}, 'log.json')
+
     return data[type]

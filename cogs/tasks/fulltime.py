@@ -22,7 +22,7 @@ class Fulltime(Cog):
 
     @Cog.listener('on_ready')
     async def ready(self):
-        # await self.crawling()
+        await self.crawling()
         self.crawler.start()
 
 

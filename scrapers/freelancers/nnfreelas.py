@@ -2,7 +2,7 @@ from scrapers import Crawler
 
 from httpx import AsyncClient
 from bs4 import BeautifulSoup
-from re import search
+from re import findall
 
 from models.job import Job
 
@@ -11,7 +11,7 @@ class Scraper(Crawler):
     platform = '99freelas'
 
 
-    async def _scraping(cls, client: AsyncClient, _search: str, channel_id: int, _page: int = 1):
+    async def _scraping(cls, client: AsyncClient, search: str, channel_id: int, _page: int = 1, **_):
         path = f'/projects?q={_search}&page={_page}'
 
         last_day = '&data-da-publicacao=menos-de-24-horas-atras'
@@ -20,7 +20,6 @@ class Scraper(Crawler):
         days = cls.last_used()
         path +=  last_day if  days <= 1 else (last_2days if days <= 3 else '')
 
-        response = await cls.request(cls, client, path, search)
         response = await cls.request(cls, client, f'/projects?q={_search}&page={_page}', _search)
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -32,13 +31,16 @@ class Scraper(Crawler):
             element = project.find('h1', class_ = 'title')
 
             job.title = element.text.strip()
+            if 'aposta' in job.title.lower(): continue
+
             job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{_page}', '')
 
             timestamp = int(int(project.find('b', class_ = 'datetime').get('cp-datetime')) / 1000)
             job.description = f'**Publicado**: <t:{timestamp}:R>\n'
 
             bids_element = project.find('p', class_ = 'item-text')
-            job.description += '**Propostas**: ' + search(r'Propostas: (\d+)', bids_element.text).group(1)
+
+            job.description += '**Propostas**: ' + findall(r'Propostas: (\d+)', bids_element.text)[0]
 
             job.footer = cls.platform
 

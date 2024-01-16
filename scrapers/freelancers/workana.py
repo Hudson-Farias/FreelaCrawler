@@ -56,6 +56,7 @@ class Scraper(Crawler):
             element = project.find('h2', class_ = 'project-title')
 
             job.title = element.text.strip()
+            if 'aposta' in job.title.lower(): continue
             job.link = cls.url + element.find('a').get('href').strip().replace(f'?ref=projects_{_page}', '')
             
             time = project.find('span', class_ = 'date').get('title').lower()
